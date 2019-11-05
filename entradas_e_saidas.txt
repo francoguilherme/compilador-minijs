@@ -1,0 +1,41 @@
+1)
+
+let a = {}, b = [], c = 9;
+let __9 = 1.1;
+let _ = "abc";
+
+a& a {} = ^
+b& b [] = ^
+c& c 9 = ^
+__9& __9 1.1 = ^
+_& _ "abc" = ^
+.
+
+2)
+
+let a = 1, b, x;
+x = b = a * 8 + 1.1;
+let c = "hello ";
+c = c + ", " + 'world' + '!';
+
+a& a 1 = ^
+b& x&
+x b a@ 8 * 1.1 + = = ^
+c& c "hello " = ^
+c c@ ", " + "world" + "!" + = ^
+.
+
+3)
+
+let a = 4, b = 5, c, d;
+if( a > b )
+  c = "a e' maior" + "!";
+if( a < b + 1 )
+  d = "a e' menor";
+
+a& a 4 = ^
+b& b 5 = ^
+c& d&
+a@ b@ > ? c "a e' maior" "!" + = ^
+a@ b@ 1 + < ? d "a e' menor" = ^
+.
