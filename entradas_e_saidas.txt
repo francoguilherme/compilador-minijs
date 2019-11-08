@@ -39,3 +39,13 @@ c& d&
 a@ b@ > ? c "a e' maior" "!" + = ^
 a@ b@ 1 + < ? d "a e' menor" = ^
 .
+
+9)
+
+let a = 1, x = '9';
+b = 10;
+
+10)
+
+let a = {}, b = [], c = 9;
+let a;

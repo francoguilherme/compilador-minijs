@@ -669,7 +669,7 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 15 "mini_js.l"
+#line 13 "mini_js.l"
 
 
 #line 676 "lex.yy.c"
@@ -757,68 +757,68 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 17 "mini_js.l"
+#line 15 "mini_js.l"
 { coluna += 4; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 18 "mini_js.l"
+#line 16 "mini_js.l"
 { coluna++; }
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 19 "mini_js.l"
+#line 17 "mini_js.l"
 { yylineno++; coluna = 1; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 21 "mini_js.l"
+#line 19 "mini_js.l"
 { return retorna( NUM ); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 22 "mini_js.l"
+#line 20 "mini_js.l"
 { return retorna( STR ); }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 24 "mini_js.l"
+#line 22 "mini_js.l"
 { return retorna( PRINT ); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 26 "mini_js.l"
+#line 24 "mini_js.l"
 { return retorna( IF ); }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 27 "mini_js.l"
+#line 25 "mini_js.l"
 { return retorna( LET ); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 28 "mini_js.l"
+#line 26 "mini_js.l"
 { return retorna( ID ); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 29 "mini_js.l"
+#line 27 "mini_js.l"
 { return retorna( NEWOBJECT ); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 30 "mini_js.l"
+#line 28 "mini_js.l"
 { return retorna( NEWARRAY ); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 32 "mini_js.l"
+#line 30 "mini_js.l"
 { return retorna( *yytext ); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 34 "mini_js.l"
+#line 32 "mini_js.l"
 ECHO;
 	YY_BREAK
 #line 825 "lex.yy.c"
@@ -1819,6 +1819,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 34 "mini_js.l"
+#line 32 "mini_js.l"
 
 

@@ -9,8 +9,6 @@ NEWOBJECT  "{}"
 NEWARRAY   "[]"
 IF         "if"
 
-EOF        "<<EOF>>"
-
 %option noyywrap
 %%
 
