@@ -33,11 +33,10 @@ if( a > b )
 if( a < b + 1 )
   d = "a e' menor";
 
-a& a 4 = ^
-b& b 5 = ^
-c& d&
-a@ b@ > ? c "a e' maior" "!" + = ^
-a@ b@ 1 + < ? d "a e' menor" = ^
+a & a 4 = ^
+b & b 5 = ^
+c & d & a @ b @ > 25 ? 31 # c "a e' maior" "!" + = ^
+a @ b @ 1 + < 42 ? 46 # d "a e' menor" = ^
 .
 
 9)
