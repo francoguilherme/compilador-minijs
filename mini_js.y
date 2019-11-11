@@ -24,7 +24,9 @@ vector<string> resolve_enderecos( vector<string> entrada );
 vector<string> concatena( vector<string> a, vector<string> b );
 vector<string> operator+( vector<string> a, vector<string> b );
 vector<string> operator+( vector<string> a, string b );
+vector<string> operator+( string b, vector<string> a);
 vector<string> operator+( vector<string> a, const char* b );
+vector<string> operator+( const char* b, vector<string> a );
 
 // prototipo para o analisador lexico (gerado pelo lex)
 int yylex();
@@ -36,7 +38,7 @@ int coluna = 1;
 
 %}
 
-%token NUM STR ID PRINT LET NEWOBJECT NEWARRAY IF END 0 "end of file"
+%token NUM STR ID PRINT LET NEWOBJECT NEWARRAY IF ELSE WHILE FOR EQUALS END 0 "end of file"
 
 %left '+' '-'
 %left '*' '/'
@@ -47,14 +49,45 @@ P : CMDs ';' P
   | CMDs { $$.v = resolve_enderecos( $$.v ); print_all( $$.v ); print("."); }
   ;
 
+BLOCO : CMD { $$.v = $1.v; }
+      | '{' CMDs '}' { $$.v = $2.v; }
+
 CMDs : CMD CMDs { $$.v = $1.v + $2.v; }
      | CMD { $$.v = $1.v; }
      ;
 
 CMD : CMD_LET
     | CMD_IF
+    | CMD_WHILE
+    | CMD_FOR
+    | A_PROP ';' { $$.v = $1.v; }
     | A ';' { $$.v = $1.v; }
     ;
+
+A_PROP : | PROP '=' E { $$.v = $1.v + $3.v + "[=]" + "^"; }
+
+A : ARR '=' E { $$.v = $1.v + $3.v + "[=]" + "^"; }
+  | ID '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "=" + "^"; }
+  ;
+
+ARR : E INDEX { $$.v = $1.v + $2.v; }
+
+INDEX : '[' E ']' INDEX { $$.v = $2.v + $4.v; }
+      | '[' E ']' { $$.v = $2.v; }
+
+PROP : E '[' E ']' { $$.v = $1.v + $3.v; }
+     | E '.' ID { $$.v = $1.v + $3.v; }
+
+CMD_FOR : FOR '(' LET B ';' E ';' E ')' BLOCO
+              { string checa = gera_label("while"); string then = gera_label("then"); string fim = gera_label("fim_if");
+                $$.v = $4.v + (":" + checa) + $6.v + then + "?" + fim + "#" + (":" + then) + $10.v + $8.v + "^" + checa + "#" + (":" + fim); }
+        | FOR '(' E ';' E ';' E ')' BLOCO
+              { string checa = gera_label("while"); string then = gera_label("then"); string fim = gera_label("fim_if");
+                $$.v = $3.v + (":" + checa) + $5.v + then + "?" + fim + "#" + (":" + then) + $9.v + $7.v + checa + "#" + (":" + fim); }
+
+CMD_WHILE : WHILE '(' E ')' BLOCO
+            { string checa = gera_label("while"); string then = gera_label("then"); string fim = gera_label("fim");
+              $$.v = (":" + checa) + $3.v + then + "?" + fim + "#" + (":" + then) + $5.v + checa + "#" + (":" + fim); }
 
 CMD_LET : LET IDS ';' { $$.v = $2.v; }
         ;
@@ -66,25 +99,30 @@ IDS : B ',' IDS { $$.v = $1.v + $3.v; }
 B : ID { insere_variavel( $1.v, $1.l ); $$.v = $1.v + "&"; }
   | ID '=' E { insere_variavel( $1.v, $1.l ); $$.v = $1.v + "&" + $1.v + $3.v + "=" + "^"; }
 
-CMD_IF : IF '(' E ')' CMD
+CMD_IF : IF '(' E ')' BLOCO
          { string label = gera_label("then"); string fim = gera_label("fim_if");
            $$.v = $3.v + label + "?" + fim + "#" + (":" + label) + $5.v + (":" + fim); }
-
-A : ID '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "=" + "^"; }
-  ;
+       | IF '(' E ')' BLOCO ELSE BLOCO
+         { string then = gera_label("then"); string els = gera_label("else"); string else_then = gera_label("then"); string fim = gera_label("fim_if");
+           $$.v = $3.v + then + "?" + els + "#" + (":" + then) + $5.v + fim + "#" + (":" + els) + $7.v + (":" + fim); }
 
 E : ID '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "="; }
+  | PROP '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "[=]"; }
+  | '(' E ')' { $$.v = $2.v; }
   | E '+' E { $$.v = $1.v + $3.v + "+"; }
   | E '-' E { $$.v = $1.v + $3.v + "-"; }
   | E '*' E { $$.v = $1.v + $3.v + "*"; }
   | E '/' E { $$.v = $1.v + $3.v + "/"; }
   | E '>' E { $$.v = $1.v + $3.v + ">"; }
   | E '<' E { $$.v = $1.v + $3.v + "<"; }
+  | E EQUALS E { $$.v = $1.v + $3.v + "=="; }
   | F { $$.v = $1.v; }
   ;
-  
+
 F : ID { $$.v = $1.v + "@"; }
+  | PROP { $$.v = $1.v + "[@]"; }
   | NUM { $$.v = $1.v; }
+  | '-' NUM { $$.v = "0" + $2.v + "-"; }
   | STR { $$.v = $1.v; }
   | NEWOBJECT { $$.v = $1.v; }
   | NEWARRAY { $$.v = $1.v; }
@@ -116,7 +154,6 @@ void insere_variavel( vector<string> command, int line ) {
    if (tabela_variaveis.count( var ) > 0) {
     string erro = "a variável '" + var + "' já foi declarada na linha " + to_string(tabela_variaveis[var]) + ".";
     yyerror(erro.c_str());
-    exit(0);
   } else {
     tabela_variaveis[var] = line;
   }
@@ -127,7 +164,6 @@ void checa_variavel_existe( vector<string> command ) {
   if (tabela_variaveis.count( var ) == 0) {
     string erro = "a variável '" + var + "' não foi declarada.";
     yyerror(erro.c_str());
-    exit(0);
   }
 }
 
@@ -165,9 +201,20 @@ vector<string> operator+( vector<string> a, string b ) {
   return a;
 }
 
+vector<string> operator+( string b, vector<string> a) {
+  a.insert(a.begin(), b);
+  return a;
+}
+
 vector<string> operator+( vector<string> a, const char* b ) {
   string str = b;
   a.push_back(str);
+  return a;
+}
+
+vector<string> operator+( const char* b, vector<string> a ) {
+  string str = b;
+  a.insert(a.begin(), str);
   return a;
 }
 
@@ -195,9 +242,9 @@ vector<string> resolve_enderecos( vector<string> entrada ) {
 }
 
 void yyerror( const char* msg ) {
-  cout << endl << "Erro: " << msg << endl;
+  cerr << "Erro: " << msg << endl;
        //<< "Perto de : '" << yylval.v << "'" <<endl;
-  exit( 0 );
+  exit(1);
 }
 
 void print( string st ) {

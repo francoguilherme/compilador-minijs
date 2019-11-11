@@ -2,12 +2,16 @@ DIGITO  [0-9]
 LETRA   [A-Za-z_]
 DOUBLE  {DIGITO}+("."{DIGITO}+)?
 ID      {LETRA}({LETRA}|{DIGITO})*
-STR 	(\"|\')([^\"\n]|(\\\")|\"\")+(\"|\')
+STR 	((\")([^\"\n]|(\\\")|\"\")+(\"))|(\')([^\'\n]|(\\\")|\"\")+(\')
 
 LET        "let"
 NEWOBJECT  "{}"
 NEWARRAY   "[]"
 IF         "if"
+ELSE       "else"
+WHILE      "while"
+FOR        "for"
+EQUALS     "=="
 
 %option noyywrap
 %%
@@ -22,6 +26,10 @@ IF         "if"
 "print"    { return retorna( PRINT ); }
 
 {IF}        { return retorna( IF ); }
+{ELSE}      { return retorna( ELSE ); }
+{WHILE}     { return retorna( WHILE ) ;}
+{FOR}       { return retorna( FOR ) ;}
+{EQUALS}    { return retorna( EQUALS ); }
 {LET}       { return retorna( LET ); }
 {ID}        { return retorna( ID ); }
 {NEWOBJECT} { return retorna( NEWOBJECT ); }

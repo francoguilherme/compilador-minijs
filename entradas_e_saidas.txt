@@ -35,8 +35,103 @@ if( a < b + 1 )
 
 a & a 4 = ^
 b & b 5 = ^
-c & d & a @ b @ > 25 ? 31 # c "a e' maior" "!" + = ^
+c & d & 
+a @ b @ > 25 ? 31 # c "a e' maior" "!" + = ^
 a @ b @ 1 + < 42 ? 46 # d "a e' menor" = ^
+.
+
+4)
+
+let a = "ABA", c = 'CATE', resultado;
+if( a == c )
+  resultado = "Ta' errado!";
+else if( a < c ) {
+  resultado = "a vem antes de c: ";
+  resultado = resultado + a + '<' + c;
+}
+else
+  resultado = "Deu ruim!";
+
+5)
+
+let obj = {}, i = -2;
+obj.nome = "Manoel";
+obj.nums = [];
+obj.nums[0] = 12;
+obj.nums[3] = 13;
+obj.nums[i+3] = 45;
+obj['nom' + 'e'] = obj.nome + "!";
+
+obj & obj {} = ^
+i & i 0 2 - = ^
+obj @ nome "Manoel" [=] ^
+obj @ nums [] [=] ^
+obj @ nums [@] 0 12 [=] ^
+obj @ nums [@] 3 13 [=] ^
+obj @ nums [@] i @ 3 + 45 [=] ^
+obj @ 'nom' 'e' + obj @ nome [@] "!" + [=] ^
+.
+
+6)
+
+let i = 0, j = -1, x = 9, b = [];
+while( i < x - 2*3 + 2.1 ) {
+  b[i] = j;
+  i = i + 1;
+  j = i / 2.0 + j;
+}
+j = x = 0;
+
+7)
+
+let a = {}, campo = "c";
+for( let i = 0; i < 6; i = i + 2 ) {
+  a[campo = campo + i] = i;
+}
+
+8)
+
+let a = [], b = [], c = [];
+let i, j, k;
+for( i = 0; i < 4; i = i + 1 ) {
+  a[i] = [];
+  b[i] = [];
+  for( j = 0; j < 4; j = j + 1 ) {
+    a[i][j] = b[i][j] = 1.1/(i+j+1.0);
+  }
+}
+
+for( i = 0; i < 4; i = i + 1 ) {
+  c[i] = [];
+  for( j = 0; j < 4; j = j + 1 ) {
+    c[i][j] = 0;
+    for( k = 0; k < 4; k = k + 1 ) {
+      c[i][j] = c[i][j] + a[i][k] * b[k][j];
+    }
+  }
+}
+
+a & a [] = ^
+b & b [] = ^
+c & c [] = ^
+i & j & k &
+i 0 = i @ 4 < 35 ? 101 #
+  a @ i @ [] [=] ^
+  b @ i @ [] [=] ^
+    j 0 = j @ 4 < 60 ? 93 #
+    a @ i @ j @ b @ i @ [@] j @ 1.1 i @ j @ + 1.0 + / [=] [=] ^
+    j j @ 1 + = 52 #
+  i i @ 1 + = 27 #
+
+i 0 = i @ 4 < 112 ? 208 #
+c @ i @ [] [=] ^
+  j 0 = j @ 4 < 130 ? 200 #
+    c @ i @ j @ 0 [=] ^
+    k 0 = k @ 4 < 150 ? 192 #
+      c @ i @ j @ c @ i @ [@] j @ [@] a @ i @ [@] k @ [@] b @ k @ [@] j @ [@] * + [=] ^
+      k k @ 1 + = 142 #
+    j j @ 1 + = 122 #
+  i i @ 1 + = 104 #
 .
 
 9)
