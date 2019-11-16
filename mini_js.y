@@ -8,8 +8,11 @@ using namespace std;
 
 struct Atributos {
   vector<string> v;
+  int nargs;
   int l;
 };
+
+vector<string> funcoes;
 
 #define YYSTYPE Atributos
 
@@ -20,6 +23,7 @@ void insere_variavel( vector<string> var, int line );
 void checa_variavel_dupla(vector<string> var);
 void checa_variavel_existe(vector<string> var);
 string gera_label( string prefixo );
+vector<string> gera_variaveis_locais( vector<string> vars );
 vector<string> resolve_enderecos( vector<string> entrada );
 vector<string> concatena( vector<string> a, vector<string> b );
 vector<string> operator+( vector<string> a, vector<string> b );
@@ -27,26 +31,32 @@ vector<string> operator+( vector<string> a, string b );
 vector<string> operator+( string b, vector<string> a);
 vector<string> operator+( vector<string> a, const char* b );
 vector<string> operator+( const char* b, vector<string> a );
+vector<string> split( string st );
 
 // prototipo para o analisador lexico (gerado pelo lex)
 int yylex();
 void yyerror( const char* );
 int retorna( int tk );
+int retornaASM( int tk );
 
 int linha = 1;
 int coluna = 1;
 
 %}
 
-%token NUM STR ID PRINT LET NEWOBJECT NEWARRAY IF ELSE WHILE FOR EQUALS END 0 "end of file"
+%token NUM STR ID PRINT LET NEWOBJECT NEWARRAY IF ELSE WHILE FOR FUNCTION RETURN ASM EQUALS END 0 "end of file"
 
+%right '='
+%nonassoc '<' '>' EQUALS
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
+%left '.'
+%left '{' '['
 
 %%
 
 P : CMDs ';' P
-  | CMDs { $$.v = resolve_enderecos( $$.v ); print_all( $$.v ); print("."); }
+  | CMDs { $$.v = resolve_enderecos( $$.v + "." + funcoes ); print_all( $$.v ); }
   ;
 
 BLOCO : CMD { $$.v = $1.v; }
@@ -60,11 +70,27 @@ CMD : CMD_LET
     | CMD_IF
     | CMD_WHILE
     | CMD_FOR
+    | CMD_FUNCTION
+    | CMD_RETURN
+    | E ASM ';' {$$.v = $1.v + $2.v+ "^"; }
     | A_PROP ';' { $$.v = $1.v; }
     | A ';' { $$.v = $1.v; }
     ;
 
-A_PROP : | PROP '=' E { $$.v = $1.v + $3.v + "[=]" + "^"; }
+CMD_FUNCTION : FUNCTION ID '(' ')' BLOCO
+               { string label_fun = gera_label($2.v.at(0));
+                 funcoes = funcoes + (":" + label_fun) + $5.v + "undefined" + "@" + "'&retorno'" + "@" + "~";
+                 $$.v = $2.v + "&" + $2.v + "{}" + "=" + "'&funcao'" + label_fun + "[=]" + "^"; }
+             | FUNCTION ID '(' PARAMS ')' BLOCO
+               { string label_fun = gera_label($2.v.at(0));
+                 vector<string> locais = gera_variaveis_locais($4.v);
+                 funcoes = funcoes + (":" + label_fun) + locais + $6.v + "undefined" + "@" + "'&retorno'" + "@" + "~";
+                 $$.v = $2.v + "&" + $2.v + "{}" + "=" + "'&funcao'" + label_fun + "[=]" + "^"; }
+
+CMD_RETURN : RETURN ';'
+           | RETURN E ';' { $$.v = $2.v + "'&retorno'"+ "@" + "~"; }
+
+A_PROP : PROP '=' E { $$.v = $1.v + $3.v + "[=]" + "^"; }
 
 A : ARR '=' E { $$.v = $1.v + $3.v + "[=]" + "^"; }
   | ID '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "=" + "^"; }
@@ -115,9 +141,19 @@ E : ID '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "="; }
   | E '/' E { $$.v = $1.v + $3.v + "/"; }
   | E '>' E { $$.v = $1.v + $3.v + ">"; }
   | E '<' E { $$.v = $1.v + $3.v + "<"; }
+  | E '%' E { $$.v = $1.v + $3.v + "%"; }
+  | E '(' ARGS ')' { $$.v = $3.v + to_string($3.nargs) + $1.v + "$"; }
   | E EQUALS E { $$.v = $1.v + $3.v + "=="; }
   | F { $$.v = $1.v; }
   ;
+
+PARAMS : ID ',' PARAMS { $$.v = $1.v + $3.v; }
+     | ID { $$.v = $1.v; }
+     | { $$.v.clear(); }
+
+ARGS : E ',' ARGS { $$.nargs = $3.nargs + 1; $$.v = $1.v + $3.v; }
+     | E { $$.nargs = 1; $$.v = $1.v; }
+     | { $$.v.clear(); $$.nargs = 0; }
 
 F : ID { $$.v = $1.v + "@"; }
   | PROP { $$.v = $1.v + "[@]"; }
@@ -144,9 +180,16 @@ map<string,int> tabela_variaveis;
 void print_all(vector<string> commands) {
   for (auto a: commands) {
     cout << a << " ";
-    if (a == "^")
+    if (a == "^" || a == "." || a == "~")
       cout << "\n";
   }
+}
+
+vector<string> gera_variaveis_locais( vector<string> vars ) {
+  vector<string> locais;
+  for( int i = 0; i < vars.size(); i++ ) 
+    locais = locais + vars.at(i) + "&" + vars.at(i) + "arguments" + "@" + to_string(i) + "[@]" + "=" + "^";
+  return locais;
 }
 
 void insere_variavel( vector<string> command, int line ) {
@@ -176,6 +219,31 @@ string nome_token( int token ) {
     r = token;
     return r;
   }
+}
+
+int retornaASM( int tk ) {
+  string lexema(yytext);
+  lexema = lexema.substr(4, lexema.size() - 5);
+  yylval.v = split(lexema + " ");
+  yylval.l = yylineno;
+  coluna += strlen( yytext );
+  return tk;
+}
+
+vector<string> split( string st ) {
+  vector<string> res;
+  string token;
+
+  for(int i=0; i<st.size(); i++){
+    if (st[i] != *" ") {
+      token = token + st[i];
+    }
+    else {
+      res.push_back(token);
+      token = "";
+    }
+  }
+  return res;
 }
 
 int retorna( int tk ) {  

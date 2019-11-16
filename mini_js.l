@@ -11,7 +11,10 @@ IF         "if"
 ELSE       "else"
 WHILE      "while"
 FOR        "for"
+FUNCTION   "function"
+RETURN     "return"
 EQUALS     "=="
+ASM        "asm{".*"}"
 
 %option noyywrap
 %%
@@ -27,13 +30,16 @@ EQUALS     "=="
 
 {IF}        { return retorna( IF ); }
 {ELSE}      { return retorna( ELSE ); }
-{WHILE}     { return retorna( WHILE ) ;}
-{FOR}       { return retorna( FOR ) ;}
+{WHILE}     { return retorna( WHILE ); }
+{FOR}       { return retorna( FOR ); }
+{FUNCTION}  { return retorna( FUNCTION ); }
+{RETURN}    { return retorna( RETURN ); }
 {EQUALS}    { return retorna( EQUALS ); }
 {LET}       { return retorna( LET ); }
 {ID}        { return retorna( ID ); }
 {NEWOBJECT} { return retorna( NEWOBJECT ); }
 {NEWARRAY}  { return retorna( NEWARRAY ); }
+{ASM}       { return retornaASM( ASM ); }
 
 .          { return retorna( *yytext ); }
 
