@@ -72,10 +72,14 @@ CMD : CMD_LET
     | CMD_FOR
     | CMD_FUNCTION
     | CMD_RETURN
+    | CALL
     | E ASM ';' {$$.v = $1.v + $2.v+ "^"; }
     | A_PROP ';' { $$.v = $1.v; }
     | A ';' { $$.v = $1.v; }
     ;
+
+CALL : E '(' ')'
+     | E '(' PARAMS ')'
 
 CMD_FUNCTION : FUNCTION ID '(' ')' BLOCO
                { string label_fun = gera_label($2.v.at(0));
@@ -93,7 +97,7 @@ CMD_RETURN : RETURN ';'
 A_PROP : PROP '=' E { $$.v = $1.v + $3.v + "[=]" + "^"; }
 
 A : ARR '=' E { $$.v = $1.v + $3.v + "[=]" + "^"; }
-  | ID '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "=" + "^"; }
+  | ID '=' E { $$.v = $1.v + $3.v + "=" + "^"; }
   ;
 
 ARR : E INDEX { $$.v = $1.v + $2.v; }
@@ -132,8 +136,8 @@ CMD_IF : IF '(' E ')' BLOCO
          { string then = gera_label("then"); string els = gera_label("else"); string else_then = gera_label("then"); string fim = gera_label("fim_if");
            $$.v = $3.v + then + "?" + els + "#" + (":" + then) + $5.v + fim + "#" + (":" + els) + $7.v + (":" + fim); }
 
-E : ID '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "="; }
-  | PROP '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "[=]"; }
+E : ID '=' E { $$.v = $1.v + $3.v + "="; }
+  | PROP '=' E { $$.v = $1.v + $3.v + "[=]"; }
   | '(' E ')' { $$.v = $2.v; }
   | E '+' E { $$.v = $1.v + $3.v + "+"; }
   | E '-' E { $$.v = $1.v + $3.v + "-"; }
@@ -147,8 +151,8 @@ E : ID '=' E { checa_variavel_existe( $1.v ); $$.v = $1.v + $3.v + "="; }
   | F { $$.v = $1.v; }
   ;
 
-PARAMS : ID ',' PARAMS { $$.v = $1.v + $3.v; }
-     | ID { $$.v = $1.v; }
+PARAMS : E ',' PARAMS { $$.v = $1.v + $3.v; }
+     | E { $$.v = $1.v; }
      | { $$.v.clear(); }
 
 ARGS : E ',' ARGS { $$.nargs = $3.nargs + 1; $$.v = $1.v + $3.v; }
