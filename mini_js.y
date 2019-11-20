@@ -72,14 +72,14 @@ CMD : CMD_LET
     | CMD_FOR
     | CMD_FUNCTION
     | CMD_RETURN
-    | CALL
-    | E ASM ';' {$$.v = $1.v + $2.v+ "^"; }
+    | CALL ';'
+    | E ASM ';' {$$.v = $1.v + $2.v + "^"; }
     | A_PROP ';' { $$.v = $1.v; }
     | A ';' { $$.v = $1.v; }
     ;
 
-CALL : E '(' ')'
-     | E '(' PARAMS ')'
+CALL : E '(' ')' { $$.v = "0" + $1.v + "$" + "^"; }
+     | E '(' ARGS ')' { $$.v = $3.v + to_string($3.nargs) + $1.v + "$" + "^"; }
 
 CMD_FUNCTION : FUNCTION ID '(' ')' BLOCO
                { string label_fun = gera_label($2.v.at(0));
@@ -191,7 +191,11 @@ void print_all(vector<string> commands) {
 
 vector<string> gera_variaveis_locais( vector<string> vars ) {
   vector<string> locais;
-  for( int i = 0; i < vars.size(); i++ ) 
+  for( int i = 0; i < vars.size(); i++ )
+    if (vars.at(i) == "@")
+      vars.erase(vars.begin() + i);
+
+  for( int i = 0; i < vars.size(); i++ )
     locais = locais + vars.at(i) + "&" + vars.at(i) + "arguments" + "@" + to_string(i) + "[@]" + "=" + "^";
   return locais;
 }
