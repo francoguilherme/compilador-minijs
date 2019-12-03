@@ -62,6 +62,8 @@ P : CMDs ';' P
 BLOCO : CMD { $$.v = $1.v; }
       | '{' CMDs '}' { $$.v = $2.v; }
 
+BLOCOVAZIO : '{''}'
+
 CMDs : CMD CMDs { $$.v = $1.v + $2.v; }
      | CMD { $$.v = $1.v; }
      ;
@@ -76,6 +78,7 @@ CMD : CMD_LET
     | E ASM ';' {$$.v = $1.v + $2.v + "^"; }
     | A_PROP ';' { $$.v = $1.v; }
     | A ';' { $$.v = $1.v; }
+    | BLOCOVAZIO { $$.v.clear(); }
     ;
 
 CALL : E '(' ')' { $$.v = "0" + $1.v + "$" + "^"; }
@@ -113,7 +116,7 @@ CMD_FOR : FOR '(' LET B ';' E ';' E ')' BLOCO
                 $$.v = $4.v + (":" + checa) + $6.v + then + "?" + fim + "#" + (":" + then) + $10.v + $8.v + "^" + checa + "#" + (":" + fim); }
         | FOR '(' E ';' E ';' E ')' BLOCO
               { string checa = gera_label("while"); string then = gera_label("then"); string fim = gera_label("fim_if");
-                $$.v = $3.v + (":" + checa) + $5.v + then + "?" + fim + "#" + (":" + then) + $9.v + $7.v + checa + "#" + (":" + fim); }
+                $$.v = $3.v + "^" + (":" + checa) + $5.v + then + "?" + fim + "#" + (":" + then) + $9.v + $7.v + "^" + checa + "#" + (":" + fim); }
 
 CMD_WHILE : WHILE '(' E ')' BLOCO
             { string checa = gera_label("while"); string then = gera_label("then"); string fim = gera_label("fim");
@@ -149,6 +152,7 @@ E : ID '=' E { $$.v = $1.v + $3.v + "="; }
   | E '(' ARGS ')' { $$.v = $3.v + to_string($3.nargs) + $1.v + "$"; }
   | E EQUALS E { $$.v = $1.v + $3.v + "=="; }
   | F { $$.v = $1.v; }
+  | BLOCOVAZIO { $$.v.clear(); }
   ;
 
 PARAMS : E ',' PARAMS { $$.v = $1.v + $3.v; }
@@ -166,7 +170,19 @@ F : ID { $$.v = $1.v + "@"; }
   | STR { $$.v = $1.v; }
   | NEWOBJECT { $$.v = $1.v; }
   | NEWARRAY { $$.v = $1.v; }
+  | '{' CAMPOS '}' { $$.v = "{}" + $2.v; }
+  | '[' ELEMS ']' { $$.v = "[]" + $2.v; }
   ;
+
+ELEMS : ELEMS ',' E { $$.nargs = $1.nargs + 1; $$.v = $1.v + to_string($$.nargs) + $3.v + "[<=]"; }
+     | E { $$.nargs = 0; $$.v = to_string($$.nargs) + $1.v + "[<=]"; }
+     | { $$.v.clear(); $$.nargs = 0; }
+
+CAMPOS : CAMPO ',' CAMPOS { $$.v = $1.v + $3.v; }
+       | CAMPO { $$.v = $1.v; }
+       | { $$.v.clear(); }
+
+CAMPO : ID ':' E { $$.v = $1.v + $3.v + "[<=]"; }
 
 %%
 

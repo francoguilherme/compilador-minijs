@@ -1,225 +1,174 @@
 1)
+let i;
+for( i = 0; i < 10; i = i + 1 ) {
+}
 
-let str = "hello";
-function valor() { return str + ", world"; }
-let a = valor();
-
-str & str "hello" = ^
-valor & valor {} = '&funcao' 25 [=] ^
-a & a 0 valor @ $ = ^
-.
-str @ ", world" + '&retorno' @ ~
-undefined @ '&retorno' @ ~
+i & i 0 = ^
+i @ 10 < 14 ? 23 # i i @ 1 + = ^
+6 # .
 
 2)
+let o = {
+  campo: 'aba',
+  pi: 31415.0 / 10000.0,
+  obj: { g: 56 }
+};
 
-function sqr(x) { return x*x; }
-let a = sqr( 5.2 );
-
-sqr & sqr {} = '&funcao' 20 [=] ^
-a & a 5.2 1 sqr @ $ = ^
+o & o {} campo 'aba' [<=] pi 31415.0 10000.0 / [<=] obj {} g 56 [<=] [<=] = ^
 .
-x & x arguments @ 0 [@] = ^
-x @ x @ * '&retorno' @ ~
-undefined @ '&retorno' @ ~
 
 3)
-
-function mdc( a, b ) {
-  if( b == 0 )
-    return a;
-  else
-    return mdc( b, a % b );
-}
-
-let a = mdc( 24, 33  );
-
-mdc & mdc {} = '&funcao' 21 [=] ^
-a & a 24 33 2 mdc @ $ = ^
-.
-a & a arguments @ 0 [@] = ^
-b & b arguments @ 1 [@] = ^
-b @ 0 == 47 ? 54 # a @ '&retorno' @ ~
-68 # b @ a @ b @ % 2 mdc @ $ '&retorno' @ ~
-undefined @ '&retorno' @ ~
-
-4)
-
-function teste( a, b ) {
-  if( a > b )
-    return a;
-}
-
-let um = teste( 3, 4 ),
-    dois = teste( 4, 3 );
-
-teste & teste {} = '&funcao' 32 [=] ^
-um & um 3 4 2 teste @ $ = ^
-dois & dois 4 3 2 teste @ $ = ^
-.
-a & a arguments @ 0 [@] = ^
-b & b arguments @ 1 [@] = ^
-a @ b @ > 59 ? 64 # a @ '&retorno' @ ~
-undefined @ '&retorno' @ ~
-
-5)
-
 function log( msg ) {
   msg asm{println # undefined};
 }
 
-let r = log( 'Hello, world!' );
+let console = { log: log, teste : [ 'aba', 'cate' ] };
 
-log & log {} = '&funcao' 20 [=] ^
-r & r 'Hello, world!' 1 log @ $ = ^
+console.log( [1, 2, 3] );
+console.log( console.teste );
+
+log & log {} = '&funcao' 57 [=] ^
+console & console {} log log @ [<=] teste [] 0 'aba' [<=] 1 'cate' [<=] [<=] = ^
+[] 0 1 [<=] 1 2 [<=] 2 3 [<=] 1 console @ log [@] $ ^
+console @ teste [@] 1 console @ log [@] $ ^
 .
 msg & msg arguments @ 0 [@] = ^
 msg @ println # undefined ^
 undefined @ '&retorno' @ ~
 
-6)
-
-let console = {};
-let Number = {};
-
+4)
 function log( msg ) {
   msg asm{println # undefined};
 }
 
-function number_to_string( msg ) {
-  msg asm{to_string # '&retorno' @ ~};
+function criaObj() {
+  return { a : [ {}, { teste: 1 }, c=24*8+1 ], b: 'nome' };
 }
 
-console.log = log;
-Number.toString = number_to_string;
+let obj;
+let c;
+obj = criaObj();
 
-let a = "Saida: ";
-let b = 3.14;
+log( obj );
+log( obj.a );
+log( obj.a[obj.a[1].teste+1] );
 
-console.log( a + Number.toString( b ) );
+log & log {} = '&funcao' 66 [=] ^
+criaObj & criaObj {} = '&funcao' 86 [=] ^
+obj & c & obj 0 criaObj @ $ = ^
+obj @ 1 log @ $ ^
+obj @ a [@] 1 log @ $ ^
+obj @ a [@] obj @ a [@] 1 [@] teste [@] 1 + [@] 1 log @ $ ^
+.
+msg & msg arguments @ 0 [@] = ^
+msg @ println # undefined ^
+undefined @ '&retorno' @ ~
+{} a [] 0 {} [<=] 1 {} teste 1 [<=] [<=] 2 c 24 8 * 1 + = [<=] [<=] b 'nome' [<=] '&retorno' @ ~
+undefined @ '&retorno' @ ~
+
+5)
+let par = function( n ) {
+  if( n % 2 == 0 )
+    return true;
+  else
+    return false;
+};
+
+let a = par( 4 );
+
+6)
+function log( msg ) {
+  msg asm{println # undefined};
+}
+
+function map( a, f ) {
+  let res = [];
+
+  forEach( a, (x,j) => (res[j] = f(x)) );
+
+  return res;
+}
+
+function forEach( array, funcao ) {
+  for( let i = 0; i < array.size; i = i + 1 )
+    funcao( array[i], i );
+}
+
+let a = [ 1, 2, 3, 4 ];
+log( map( a, x => x*x + 1 ) );
 
 7)
-
-let console = {};
-
-function exit( n ) {
-  'Codigo de erro: ' asm{print # undefined};
-  n asm{println # undefined};
-  0 asm{.};
+function log( msg ) {
+  msg asm{println # undefined};
 }
 
-function teste( a, b, c ) {
-  exit( b );
+function invert( a ) {
+  let res = [];
+
+  for( let i = 0; i < a.size; i = i + 1 )
+    res[a.size-i-1] = a[i];
+
+  return res;
 }
 
-let a = "Saida: ";
-let b = 3.14;
+function reduce( a, f, x ) {
+  for( let i = 0; i < a.size; i = i + 1 )
+    x = f( a[i], x, i );
 
-console.teste = {};
-console.teste.log = [];
-console.teste.log[1] = teste;
+  return x;
+}
 
-console.teste.log[1]( a, b, "5" );
+let a = [1, 2, 3, 4, 5];
 
-console & console {} = ^
-exit & exit {} = '&funcao' 77 [=] ^
-teste & teste {} = '&funcao' 105 [=] ^
-a & a "Saida: " = ^
-b & b 3.14 = ^
-console @ teste {} [=] ^
-console @ teste [@] log [] [=] ^
-console @ teste [@] log [@] 1 teste @ [=] ^
-a @ b @ "5" 3 console @ teste [@] log [@] 1 [@] $ .
-n & n arguments @ 0 [@] = ^
-'Codigo de erro: ' print # undefined ^
-n @ println # undefined ^
-0 .
-^
-undefined @ '&retorno' @ ~
-a & a arguments @ 0 [@] = ^
-b & b arguments @ 1 [@] = ^
-c & c arguments @ 2 [@] = ^
-b @ 1 exit @ $ undefined @ '&retorno' @ ~
+log( reduce( a, (x,y) => x + y, 0 ) );
+
+let b = [ x => 2*x, x => x + 1 ];
+
+let pipe = (af, x) => reduce( af, (f,x) => f(x), x );
+
+log( pipe( b, 9 ) );
+log( pipe( invert( b ), 9 ) );
 
 8)
-
-function f( x ) {
-  let b = 5 * x;
-  let c = {};
-
-  c.num = b;
-  c.arr = [];
-  c.arr[1] = 0;
-  return c ;
-}
-
-let res = f( 11 );
-
-f & f {} = '&funcao' 20 [=] ^
-res & res 11 1 f @ $ = ^
-.
-x & x arguments @ 0 [@] = ^
-b & b 5 x @ * = ^
-c & c {} = ^
-c @ num b @ [=] ^
-c @ arr [] [=] ^
-c @ arr [@] 1 0 [=] ^
-c @ '&retorno' @ ~
-undefined @ '&retorno' @ ~
-
-9)
-
-function f( x ) {
-  let b = f;
-  f = x;
-  return b;
-}
-
-let a;
-let g = f( a = [], {} );
-
-10)
-
-function getNome( obj ) { return obj.nome; }
-
-function getClass( obj ) { return obj.class; }
-
-function criaAluno( nome, celular, email ) {
-  let aluno = {};
-
-  aluno.nome = nome;
-  aluno.celular = celular;
-  aluno.email = email;
-  aluno.super = prototipoAluno;
-  aluno.getNome = getNome;
-
-  return aluno;
+function criaPessoa( nome, sobrenome ) {
+  return { nome: nome, sobrenome: sobrenome, nomeCompleto : pessoa => pessoa.nome + ' ' + pessoa.sobrenome };
 }
 
 function log( msg ) {
   msg asm{println # undefined};
 }
 
-function invoke( obj, metodo ) {
-  if( toString( obj[metodo] ) == 'undefined' )
-    return obj.super[metodo]( obj.super );
+let p = criaPessoa( 'Maria', 'da Silva' );
+
+log( p.nomeCompleto( p ) );
+
+9)
+function log( msg ) {
+  msg asm{println # undefined};
+}
+
+function mdc( a = 36, b = 48 ) {
+  if( b == 0 )
+    return a;
   else
-    return obj[metodo]( obj );
+    return mdc( b, a%b );
 }
 
-function toString( msg ) {
-  msg asm{to_string # '&retorno' @ ~};
+log( mdc() );
+log( mdc( 18 ) );
+log( mdc( 15, 25 ) );
+
+10)
+function log( msg ) {
+  msg asm{println # undefined};
 }
 
-let prototipoAluno = {};
+function imprimeMdc( a = 36, b = 48, print = m => log( 'Saida: ' + m )  ) {
+  if( b == 0 )
+    print( a );
+  else
+    imprimeMdc( b, a%b, print );
+}
 
-prototipoAluno.class = 'Classe Aluno';
-prototipoAluno.getClass = getClass;
-
-let joao = criaAluno( 'Joao', '123456', 'eu@aqui.com' );
-let maria = criaAluno( 'Maria', '123457', 'voce@la.com' );
-
-log( invoke( joao, 'getNome' ) );
-log( invoke( joao, 'getClass' ) );
-log( invoke( maria, 'getNome' ) );
-log( invoke( maria, 'getClass' ) );
+imprimeMdc( 24, 18 );
+imprimeMdc( 8, 4, log );
