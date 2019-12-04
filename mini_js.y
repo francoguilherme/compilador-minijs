@@ -31,6 +31,7 @@ vector<string> operator+( vector<string> a, string b );
 vector<string> operator+( string b, vector<string> a);
 vector<string> operator+( vector<string> a, const char* b );
 vector<string> operator+( const char* b, vector<string> a );
+vector<string> concStrings(  const char* a, const char* b );
 vector<string> split( string st );
 
 // prototipo para o analisador lexico (gerado pelo lex)
@@ -44,9 +45,10 @@ int coluna = 1;
 
 %}
 
-%token NUM STR ID PRINT LET NEWOBJECT NEWARRAY IF ELSE WHILE FOR FUNCTION RETURN ASM EQUALS END 0 "end of file"
+%token NUM STR ID PRINT LET NEWOBJECT NEWARRAY IF ELSE WHILE FOR FUNCTION RETURN ASM EQUALS ARROW ABRE_PAR_SETA END 0 "end of file"
 
 %right '='
+%right ARROW
 %nonassoc '<' '>' EQUALS
 %left '+' '-'
 %left '*' '/' '%'
@@ -68,21 +70,42 @@ CMDs : CMD CMDs { $$.v = $1.v + $2.v; }
      | CMD { $$.v = $1.v; }
      ;
 
-CMD : CMD_LET
+CMD : CMD_LET 
     | CMD_IF
-    | CMD_WHILE
+    | CMD_WHILE 
     | CMD_FOR
-    | CMD_FUNCTION
+    | CMD_FUNCTION 
     | CMD_RETURN
     | CALL ';'
-    | E ASM ';' {$$.v = $1.v + $2.v + "^"; }
+    | E ASM ';' { $$.v = $1.v + $2.v + "^"; }
     | A_PROP ';' { $$.v = $1.v; }
-    | A ';' { $$.v = $1.v; }
+    | A ';' { $$.v = $1.v; } 
     | BLOCOVAZIO { $$.v.clear(); }
     ;
 
 CALL : E '(' ')' { $$.v = "0" + $1.v + "$" + "^"; }
      | E '(' ARGS ')' { $$.v = $3.v + to_string($3.nargs) + $1.v + "$" + "^"; }
+
+FUNCAO_SETA : HEAD ARROW BLOCO 
+              { string label_fun = gera_label("seta");
+                vector<string> locais = gera_variaveis_locais($1.v);
+                funcoes = funcoes + (":" + label_fun) + locais + $3.v + "'&retorno'"+ "@" + "~" + "undefined" + "@" + "'&retorno'" + "@" + "~";
+                $$.v = concStrings("{}", "'&funcao'") + label_fun + "[<=]"; }
+            | HEAD ARROW E 
+              { string label_fun = gera_label("seta");
+                vector<string> locais = gera_variaveis_locais($1.v);
+                funcoes = funcoes + (":" + label_fun) + locais + $3.v + "'&retorno'"+ "@" + "~" + "undefined" + "@" + "'&retorno'" + "@" + "~";
+                $$.v = concStrings("{}", "'&funcao'") + label_fun + "[<=]"; }
+            ;
+        
+HEAD : ID { $$.v = $1.v; } { $$.v = $1.v; }
+     | '(' ')' { $$.v.clear(); }
+     | ABRE_PAR_SETA ARROW_ARGS ')' { $$.v = $2.v; }
+     ;
+
+ARROW_ARGS : ARROW_ARGS ',' ID { $$.v = $1.v + $3.v; }
+           | ID { $$.v = $1.v; }
+           ;
 
 CMD_FUNCTION : FUNCTION ID '(' ')' BLOCO
                { string label_fun = gera_label($2.v.at(0));
@@ -93,9 +116,20 @@ CMD_FUNCTION : FUNCTION ID '(' ')' BLOCO
                  vector<string> locais = gera_variaveis_locais($4.v);
                  funcoes = funcoes + (":" + label_fun) + locais + $6.v + "undefined" + "@" + "'&retorno'" + "@" + "~";
                  $$.v = $2.v + "&" + $2.v + "{}" + "=" + "'&funcao'" + label_fun + "[=]" + "^"; }
+             | FUNCTION '(' ')' BLOCO
+               { string label_fun = gera_label("anonima");
+                 funcoes = funcoes + (":" + label_fun) + $4.v + "undefined" + "@" + "'&retorno'" + "@" + "~";
+                 $$.v = concStrings("{}", "'&funcao'") + label_fun + "[<=]"; }
+             | FUNCTION '(' PARAMS ')' BLOCO
+               { string label_fun = gera_label("anonima");
+                 vector<string> locais = gera_variaveis_locais($3.v);
+                 funcoes = funcoes + (":" + label_fun) + locais + $5.v + "undefined" + "@" + "'&retorno'" + "@" + "~";
+                 $$.v = concStrings("{}", "'&funcao'") + label_fun + "[<=]"; }
+             ;
 
 CMD_RETURN : RETURN ';'
            | RETURN E ';' { $$.v = $2.v + "'&retorno'"+ "@" + "~"; }
+           ;
 
 A_PROP : PROP '=' E { $$.v = $1.v + $3.v + "[=]" + "^"; }
 
@@ -126,11 +160,11 @@ CMD_LET : LET IDS ';' { $$.v = $2.v; }
         ;
 
 IDS : B ',' IDS { $$.v = $1.v + $3.v; }
-    | B
+    | B { $$.v = $1.v; }
     ;
 
-B : ID { insere_variavel( $1.v, $1.l ); $$.v = $1.v + "&"; }
-  | ID '=' E { insere_variavel( $1.v, $1.l ); $$.v = $1.v + "&" + $1.v + $3.v + "=" + "^"; }
+B : ID { $$.v = $1.v + "&"; }
+  | ID '=' E { $$.v = $1.v + "&" + $1.v + $3.v + "=" + "^"; }
 
 CMD_IF : IF '(' E ')' BLOCO
          { string label = gera_label("then"); string fim = gera_label("fim_if");
@@ -153,6 +187,8 @@ E : ID '=' E { $$.v = $1.v + $3.v + "="; }
   | E EQUALS E { $$.v = $1.v + $3.v + "=="; }
   | F { $$.v = $1.v; }
   | BLOCOVAZIO { $$.v.clear(); }
+  | CMD_FUNCTION { $$.v = $1.v; }
+  | FUNCAO_SETA { $$.v = $1.v; }
   ;
 
 PARAMS : E ',' PARAMS { $$.v = $1.v + $3.v; }
@@ -308,6 +344,15 @@ vector<string> operator+( const char* b, vector<string> a ) {
   string str = b;
   a.insert(a.begin(), str);
   return a;
+}
+
+vector<string> concStrings( const char* a, const char* b ) {
+  string stra = a;
+  string strb = b;
+  vector<string> v;
+  v.insert(v.begin(), b);
+  v.insert(v.begin(), a);  
+  return v;
 }
 
 string gera_label( string prefixo ) {

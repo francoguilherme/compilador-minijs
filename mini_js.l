@@ -3,6 +3,7 @@ LETRA   [A-Za-z_]
 DOUBLE  {DIGITO}+("."{DIGITO}+)?
 ID      {LETRA}({LETRA}|{DIGITO})*
 STR 	((\")([^\"\n]|(\\\")|\"\")+(\"))|(\')([^\'\n]|(\\\")|\"\")+(\')
+WS      (\n|\t|\ )*
 
 LET        "let"
 NEWOBJECT  "{}"
@@ -15,10 +16,13 @@ FUNCTION   "function"
 RETURN     "return"
 EQUALS     "=="
 ASM        "asm{".*"}"
+ARROW      "=>"
+ARGS       {WS}{ID}{WS}(","{WS}{ID}{WS})*")"{WS}"=>"
 
 %option noyywrap
 %%
 
+"("/{ARGS} { return retorna( ABRE_PAR_SETA ); } 
 "\t"       { coluna += 4; }
 " "        { coluna++; }
 "\n"	   { yylineno++; coluna = 1; }
@@ -36,10 +40,11 @@ ASM        "asm{".*"}"
 {RETURN}    { return retorna( RETURN ); }
 {EQUALS}    { return retorna( EQUALS ); }
 {LET}       { return retorna( LET ); }
-{ID}        { return retorna( ID ); }
 {NEWOBJECT} { return retorna( NEWOBJECT ); }
 {NEWARRAY}  { return retorna( NEWARRAY ); }
 {ASM}       { return retornaASM( ASM ); }
+{ARROW}     { return retorna( ARROW ); }
+{ID}        { return retorna( ID ); }
 
 .          { return retorna( *yytext ); }
 
